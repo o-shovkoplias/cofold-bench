@@ -173,7 +173,7 @@ ColabFold with unified memory). Phase 2 timings will be recorded in `results/raw
 * "Post-cutoff" refers to the *structures*; homologous complexes may pre-date the cutoff (see above).
 * Single seed / 5 models per predictor; ranking by each predictor's own confidence. Boltz-2 is run without
   inference-time potentials (`use_potentials: false`) to compare the raw models.
-* The reference is biological assembly 1 as annotated by the depositors; for 21/22 targets this equals the asymmetric unit.
+* The reference is biological assembly 1 as annotated by the depositors; for all 22 targets it equals the asymmetric unit (checked with Biotite: same chains and residue counts).
 * Antibody–antigen complexes are a known-hard, separate class: only two are kept, clearly labelled, and are reported separately.
 
 ## Layout
