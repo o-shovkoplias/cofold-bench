@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cofoldbench"
+version = "0.1.0"
+description = "Reproducible benchmark: Boltz-2 cofolding vs AlphaFold2-Multimer (ColabFold) on post-cutoff protein heterodimers"
+authors = [{ name = "Oleksandr Shovkoplias", email = "sovkoplias@gmail.com" }]
+license = { text = "MIT" }
+requires-python = ">=3.11"
+readme = "README.md"
+dependencies = [
+  "biotite>=1.0",
+  "DockQ>=2.1",
+  "numpy",
+  "pandas",
+  "matplotlib",
+  "pyyaml",
+  "requests",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

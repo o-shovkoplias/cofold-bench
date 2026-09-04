@@ -1,0 +1,12 @@
+# Scoring / data-handling layer (CPU). Install into the `cofold` env:
+#   pip install -r requirements.txt
+# Predictors are NOT pinned here on purpose (see environment.yml and README):
+#   boltz[cuda]  (Boltz-2, env `cofold`)   |  colabfold[alphafold] (AF2-Multimer, env `colabfold`)
+biotite>=1.0
+DockQ>=2.1
+numpy>=1.26
+pandas>=2.0
+matplotlib>=3.8
+pyyaml>=6.0
+requests>=2.31
+pytest>=8.0

@@ -1,0 +1,32 @@
+# large MD / binary artefacts
+*.xtc
+*.trr
+*.tpr
+*.cpt
+*.edr
+*.npz
+*.pkl
+*.pickle
+*.h5
+*.pt
+*.ckpt
+*.tar
+*.tar.gz
+*.zip
+# raw prediction outputs (phase 2) -- keep only aggregated CSVs and figures
+results/raw/
+results/predictions/
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+build/
+dist/
+# editors / OS
+.vscode/
+.idea/
+.DS_Store
+# local env files
+.env

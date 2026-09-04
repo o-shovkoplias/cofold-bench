@@ -1,0 +1,21 @@
+# conda env for the scoring layer + Boltz-2 (GPU, phase 2).
+#   mamba env create -f environment.yml
+# AlphaFold2-Multimer runs in a SEPARATE env (`colabfold`, python 3.10, jax+cuda):
+#   mamba create -n colabfold python=3.10 && pip install "colabfold[alphafold]" \
+#     && pip install "jax[cuda12]"   # see https://github.com/sokrypton/ColabFold
+name: cofold
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      - biotite>=1.0
+      - DockQ>=2.1
+      - numpy>=1.26
+      - pandas>=2.0
+      - matplotlib>=3.8
+      - pyyaml>=6.0
+      - requests>=2.31
+      - pytest>=8.0
+      - boltz[cuda]      # Boltz-2 (~3 GB of torch/cuda wheels); CPU-only: "boltz"

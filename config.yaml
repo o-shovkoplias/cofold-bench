@@ -1,0 +1,82 @@
+# cofold-bench configuration. All paths are relative to the repository root.
+project: cofold-bench
+author: Oleksandr Shovkoplias
+
+paths:
+  targets_dir: data/targets
+  cif_dir: data/targets/cif
+  fasta_dir: data/targets/fasta
+  boltz_inputs: data/inputs/boltz
+  colabfold_inputs: data/inputs/colabfold
+  boltz_out: results/raw/boltz
+  colabfold_out: results/raw/colabfold
+  results_dir: results
+  figures_dir: figures
+
+selection:
+  # Training cutoffs of the two predictors (see README "Cutoff rationale"):
+  #   AlphaFold-Multimer v3 (AlphaFold v2.3.0): PDB released before 2021-09-30
+  #   Boltz-2:                                    PDB released before 2023-06-01
+  # We require a release date strictly AFTER this date, later than both:
+  min_release_date: "2024-06-01"
+  max_resolution: 2.8
+  methods: ["X-RAY DIFFRACTION", "ELECTRON MICROSCOPY"]
+  total_length_min: 150
+  total_length_max: 550
+  # each chain must be a real protein domain, not a peptide
+  chain_length_min: 40
+  # antibody-like entries are excluded from the main set (title / entity descriptions)
+  antibody_keywords: ["antibody", "fab", "nanobody", "immunoglobulin", "scfv", "vhh",
+                      "heavy chain", "light chain", "igg", "ig gamma", "ig kappa", "ig lambda", "sybody"]
+  # ...but up to this many are kept as a labelled subset (subset = "antibody")
+  antibody_subset_max: 2
+  # minimum number of inter-chain residue pairs with any heavy atoms < 5 A (Biotite check)
+  min_interface_contacts: 20
+  # de-duplicate by organism+description similarity is done by hand; hard cap:
+  n_candidates: 20
+  n_targets: 16
+  rcsb_search_url: "https://search.rcsb.org/rcsbsearch/v2/query"
+  rcsb_data_url: "https://data.rcsb.org/rest/v1/core"
+  rcsb_files_url: "https://files.rcsb.org/download"
+
+boltz:
+  env: cofold
+  recycling_steps: 3
+  diffusion_samples: 5
+  sampling_steps: 200
+  use_msa_server: true
+  use_potentials: false
+  output_format: mmcif
+  msa_pairing_strategy: greedy
+  seed: 42
+
+colabfold:
+  env: colabfold
+  model_type: alphafold2_multimer_v3
+  num_recycle: 3
+  num_models: 5
+  num_seeds: 1
+  msa_mode: mmseqs2_uniref_env
+  pair_mode: unpaired_paired
+  rank: multimer
+  random_seed: 0
+  amber: false
+
+scoring:
+  # pDockQ (Bryant, Pozzati & Elofsson 2022, Nat Commun 13:1265)
+  pdockq:
+    L: 0.724
+    x0: 152.611
+    k: 0.052
+    b: 0.018
+    cb_cutoff: 8.0
+  dockq:
+    # DockQ v2 (Mirabello & Wallner 2024) with automatic chain mapping
+    n_cpu: 4
+    acceptable: 0.23
+    medium: 0.49
+    high: 0.80
+
+hardware:
+  gpu: "NVIDIA GeForce RTX 4060 Laptop GPU, 8 GB"
+  note: "GPU runs are phase 2; phase 1 (this commit) is CPU-only"
