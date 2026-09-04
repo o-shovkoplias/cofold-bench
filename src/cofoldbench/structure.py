@@ -14,8 +14,8 @@ import biotite.structure as struc
 import biotite.structure.io.pdb as pdb
 import biotite.structure.io.pdbx as pdbx
 
-# Biotite marks protein residues via ``filter_amino_acids``; we additionally
-# require a CA atom so that unknown/UNK residues still count if they have a CA.
+# B-factor is needed because Boltz-2 and ColabFold store per-residue pLDDT there.
+EXTRA = ["b_factor"]
 
 
 def read_structure(path: str | Path, assembly: str | None = None, model: int = 1) -> struc.AtomArray:
@@ -36,15 +36,15 @@ def read_structure(path: str | Path, assembly: str | None = None, model: int = 1
     if suffix in {".cif", ".mmcif"}:
         f = pdbx.CIFFile.read(str(path))
         if assembly is not None:
-            return pdbx.get_assembly(f, assembly_id=assembly, model=model, use_author_fields=False)
-        return pdbx.get_structure(f, model=model, use_author_fields=False)
+            return pdbx.get_assembly(f, assembly_id=assembly, model=model, use_author_fields=False, extra_fields=EXTRA)
+        return pdbx.get_structure(f, model=model, use_author_fields=False, extra_fields=EXTRA)
     if suffix == ".bcif":
         f = pdbx.BinaryCIFFile.read(str(path))
         if assembly is not None:
-            return pdbx.get_assembly(f, assembly_id=assembly, model=model, use_author_fields=False)
-        return pdbx.get_structure(f, model=model, use_author_fields=False)
+            return pdbx.get_assembly(f, assembly_id=assembly, model=model, use_author_fields=False, extra_fields=EXTRA)
+        return pdbx.get_structure(f, model=model, use_author_fields=False, extra_fields=EXTRA)
     if suffix in {".pdb", ".ent"}:
-        return pdb.PDBFile.read(str(path)).get_structure(model=model)
+        return pdb.PDBFile.read(str(path)).get_structure(model=model, extra_fields=EXTRA)
     raise ValueError(f"Unsupported structure format: {path}")
 
 
