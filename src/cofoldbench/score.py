@@ -4,7 +4,8 @@ For each target and predictor the *top-ranked* model (and, optionally, every
 model) is scored with
 
 * ipTM / pTM / mean pLDDT from the predictor's confidence JSON (:mod:`confidence`),
-* pDockQ (:mod:`pdockq`) from the model's CB coordinates and B-factor pLDDT,
+* pDockQ (:mod:`pdockq`) from the model's CB coordinates and B-factor pLDDT
+  (0-100 for both predictors; a 0-1 scale is auto-detected and rescaled),
 * DockQ / iRMSD / LRMSD / fnat (:mod:`dockq_runner`) against biological
   assembly 1 of the RCSB mmCIF, restricted to protein heavy atoms and written
   as PDB with the original chain ids.
@@ -66,8 +67,8 @@ def score_model(
     chains = st.protein_chain_ids(atoms)
     if len(chains) != 2:
         raise ValueError(f"{model.model_file}: expected 2 protein chains, found {chains}")
-    plddt_scale = 100.0 if model.predictor == "boltz2" else 1.0
-    pdq_out = pdockq_from_structure(atoms, chains[0], chains[1], pdq, plddt_scale=plddt_scale)
+    # both Boltz-2 (>= 2.x) and ColabFold write pLDDT as 0-100 in the B-factor column; auto-detected anyway
+    pdq_out = pdockq_from_structure(atoms, chains[0], chains[1], pdq, plddt_scale="auto")
     dq = dockq_two_chain(model.model_file, native_pdb, native_chains, model_chains=(chains[0], chains[1]))
     row = model.as_row()
     row.update({f"pdockq_{k}" if k != "pdockq" else "pdockq": v for k, v in pdq_out.items()})

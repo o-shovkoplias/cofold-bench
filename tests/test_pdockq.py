@@ -4,7 +4,7 @@ import math
 
 import numpy as np
 
-from cofoldbench.pdockq import DEFAULT, interface_stats, pdockq_from_arrays, pdockq_from_x
+from cofoldbench.pdockq import DEFAULT, interface_stats, pdockq_from_arrays, pdockq_from_x, plddt_scale_factor
 
 
 def test_sigmoid_limits():
@@ -56,3 +56,9 @@ def test_monotonic_in_contacts_and_plddt():
     v2 = pdockq_from_x(70 * math.log10(100))
     v3 = pdockq_from_x(90 * math.log10(100))
     assert v1 < v2 < v3
+
+
+def test_plddt_scale_autodetect():
+    assert plddt_scale_factor(np.array([0.2, 0.9, 1.0])) == 100.0
+    assert plddt_scale_factor(np.array([20.0, 90.0])) == 1.0
+    assert plddt_scale_factor(np.array([np.nan, 0.5])) == 100.0

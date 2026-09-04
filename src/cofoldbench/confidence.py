@@ -4,7 +4,8 @@ Boltz-2 (``predictions/<name>/confidence_<name>_model_<k>.json``, documented in
 ``docs/prediction.md`` of https://github.com/jwohlwend/boltz): keys
 ``confidence_score, ptm, iptm, ligand_iptm, protein_iptm, complex_plddt,
 complex_iplddt, complex_pde, complex_ipde, chains_ptm, pair_chains_iptm``.
-Per-token pLDDT is also written into the B-factor column of the mmCIF (0-1 scale).
+Per-token pLDDT is also written into the B-factor column of the mmCIF as pLDDT*100
+(``boltz/data/write/mmcif.py``, checked in boltz 2.2.1).
 
 ColabFold (``<jobname>_scores_rank_00k_alphafold2_multimer_v3_model_m_seed_00s.json``,
 written in ``colabfold/batch.py``): keys ``plddt`` (per-residue list, 0-100),

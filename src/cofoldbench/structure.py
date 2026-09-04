@@ -150,9 +150,15 @@ def write_pdb(atoms: struc.AtomArray, path: str | Path) -> None:
 
 
 def write_cif(atoms: struc.AtomArray, path: str | Path) -> None:
-    """Write an AtomArray as mmCIF."""
+    """Write an AtomArray as mmCIF (with ``occupancy``/``b_factor`` columns, which DockQ's parser requires)."""
+    out = atoms.copy()
+    cats = out.get_annotation_categories()
+    if "occupancy" not in cats:
+        out.set_annotation("occupancy", np.ones(out.array_length(), dtype=float))
+    if "b_factor" not in cats:
+        out.set_annotation("b_factor", np.zeros(out.array_length(), dtype=float))
     f = pdbx.CIFFile()
-    pdbx.set_structure(f, atoms)
+    pdbx.set_structure(f, out)
     f.write(str(path))
 
 

@@ -73,13 +73,30 @@ def pdockq_from_arrays(
     return {"pdockq": pdockq_from_x(x, p), "n_if_contacts": n, "if_plddt": if_plddt, "x": float(x)}
 
 
-def pdockq_from_structure(atoms, chain_a: str, chain_b: str, p: PDockQParams = DEFAULT, plddt_scale: float = 1.0) -> dict[str, float]:
+def plddt_scale_factor(bfactors: np.ndarray) -> float:
+    """Return the factor that brings B-factor pLDDT onto the 0-100 scale.
+
+    Boltz-2 (>= 2.x, ``boltz/data/write/mmcif.py``: ``plddt * 100``) and ColabFold
+    both write pLDDT as 0-100; some tools write 0-1.  If every value is <= 1 we
+    assume the 0-1 convention and multiply by 100.
+    """
+    b = bfactors[np.isfinite(bfactors)]
+    if b.size and np.nanmax(b) <= 1.0:
+        return 100.0
+    return 1.0
+
+
+def pdockq_from_structure(
+    atoms, chain_a: str, chain_b: str, p: PDockQParams = DEFAULT, plddt_scale: float | str = "auto"
+) -> dict[str, float]:
     """pDockQ for a predicted model whose B-factor column holds pLDDT.
 
-    ``plddt_scale`` rescales the B-factor to the 0-100 range: Boltz-2 writes
-    pLDDT in [0, 1] into mmCIF (``plddt_scale=100``), ColabFold writes 0-100
-    (``plddt_scale=1``).
+    ``plddt_scale`` rescales the B-factor to the 0-100 range; ``"auto"`` (default)
+    uses :func:`plddt_scale_factor`.
     """
     ca, _, ba = st.cb_coordinates(atoms, chain_a)
     cb, _, bb = st.cb_coordinates(atoms, chain_b)
-    return pdockq_from_arrays(ca, ba * plddt_scale, cb, bb * plddt_scale, p)
+    scale = plddt_scale_factor(np.concatenate([ba, bb])) if plddt_scale == "auto" else float(plddt_scale)
+    out = pdockq_from_arrays(ca, ba * scale, cb, bb * scale, p)
+    out["plddt_scale"] = scale
+    return out
