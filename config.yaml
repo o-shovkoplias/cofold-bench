@@ -26,10 +26,12 @@ selection:
   # each chain must be a real protein domain, not a peptide
   chain_length_min: 40
   # antibody-like entries are excluded from the main set (title / entity descriptions)
-  antibody_keywords: ["antibody", "fab", "nanobody", "immunoglobulin", "scfv", "vhh",
+  antibody_keywords: ["antibody", "fab", "nanobody", "immunoglobulin", "scfv", "vhh", "sdab",
                       "heavy chain", "light chain", "igg", "ig gamma", "ig kappa", "ig lambda", "sybody"]
   # ...but up to this many are kept as a labelled subset (subset = "antibody")
   antibody_subset_max: 2
+  # two chains with global identity >= this are treated as a (pseudo-)homodimer and skipped
+  max_chain_identity: 0.9
   # minimum number of inter-chain residue pairs with any heavy atoms < 5 A (Biotite check)
   min_interface_contacts: 20
   # de-duplicate by organism+description similarity is done by hand; hard cap:
