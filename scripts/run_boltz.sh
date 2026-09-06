@@ -52,10 +52,12 @@ for ID in $IDS; do
   if [[ -f "$DONE" ]]; then echo "[skip] $ID already predicted ($DONE)"; continue; fi
   mkdir -p "$OUT"
   echo "[run ] $ID  $(date -Is)  recycling=$RECYCLE samples=$SAMPLES steps=$STEPS"
+  # --no_kernels: the cuEquivariance CUDA kernels are optional and not installed in the cofold env;
+  # the plain PyTorch path gives identical results, ~1.5-2x slower.
   # shellcheck disable=SC2086
   "$BOLTZ" predict "$YAML" \
       --out_dir "$OUT" \
-      --use_msa_server --msa_pairing_strategy "$PAIRING" \
+      --use_msa_server --msa_pairing_strategy "$PAIRING" --no_kernels \
       --recycling_steps "$RECYCLE" --diffusion_samples "$SAMPLES" --sampling_steps "$STEPS" \
       --max_parallel_samples 1 \
       --output_format "$FORMAT" --seed "$SEED" --write_full_pae \

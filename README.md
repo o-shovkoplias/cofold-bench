@@ -152,6 +152,10 @@ ColabFold `--model-type alphafold2_multimer_v3 --num-recycle 3 --num-models 5 --
 
 ## Hardware
 
+Boltz-2 is run with `--no_kernels` (the optional cuEquivariance CUDA kernels are not installed; the plain PyTorch
+path is numerically equivalent, roughly 1.5-2x slower).
+
+
 Local laptop: NVIDIA GeForce RTX 4060 Laptop GPU (8 GB), 16 CPU threads, 14 GB RAM. Phase 1 used CPU only.
 The 150–550 aa window was chosen so that both predictors fit in 8 GB (Boltz-2 with `--max_parallel_samples 1`;
 ColabFold with unified memory). Phase 2 timings will be recorded in `results/raw/*/logs`.
