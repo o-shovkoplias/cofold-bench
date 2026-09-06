@@ -13,7 +13,7 @@
 *.tar
 *.tar.gz
 *.zip
-# raw prediction outputs (phase 2) -- keep only aggregated CSVs and figures
+# raw prediction outputs -- keep only aggregated CSVs, report and figures (SETTINGS.md is force-added)
 results/raw/
 results/predictions/
 # python

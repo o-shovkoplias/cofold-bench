@@ -12,7 +12,7 @@ SEARCH_URL = "https://search.rcsb.org/rcsbsearch/v2/query"
 DATA_URL = "https://data.rcsb.org/rest/v1/core"
 FILES_URL = "https://files.rcsb.org/download"
 
-_HEADERS = {"User-Agent": "cofold-bench/0.1 (https://github.com/oshovkoplias/cofold-bench)"}
+_HEADERS = {"User-Agent": "cofold-bench/0.1 (https://github.com/o-shovkoplias/cofold-bench)"}
 
 
 def _terminal(attribute: str, operator: str, value: Any) -> dict[str, Any]:

@@ -44,6 +44,10 @@ selection:
 boltz:
   env: cofold
   recycling_steps: 3
+  # MSA truncation used for EVERY target of the benchmark (Boltz defaults 8192 / 1024 ran out of
+  # memory on 15/22 targets on the 8 GB card; see README "MSA depth" and results/raw/boltz/SETTINGS.md)
+  max_msa_seqs: 512
+  num_subsampled_msa: 128
   diffusion_samples: 5
   sampling_steps: 200
   use_msa_server: true
@@ -81,4 +85,4 @@ scoring:
 
 hardware:
   gpu: "NVIDIA GeForce RTX 4060 Laptop GPU, 8 GB"
-  note: "GPU runs are phase 2; phase 1 (this commit) is CPU-only"
+  note: "both predictors were run locally on this card (2026-09-06/07); Boltz-2 with --no_kernels and the MSA truncation above"

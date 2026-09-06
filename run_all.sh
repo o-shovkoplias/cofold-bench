@@ -33,7 +33,7 @@ if has predict-boltz; then
   if [[ -x "$ENV_DIR/bin/boltz" ]] && nvidia-smi >/dev/null 2>&1 && [[ -n "${RUN_GPU:-}" ]]; then
     scripts/run_boltz.sh all
   else
-    echo "SKIPPED: Boltz-2 GPU stage (phase 2). Requires boltz in $ENV_DIR, a GPU, and RUN_GPU=1."
+    echo "SKIPPED: Boltz-2 GPU stage. Requires boltz in $ENV_DIR, a GPU, and RUN_GPU=1."
   fi
 fi
 if has predict-af2; then
@@ -41,7 +41,7 @@ if has predict-af2; then
   if [[ -x "$HOME/miniforge3/envs/colabfold/bin/colabfold_batch" ]] && nvidia-smi >/dev/null 2>&1 && [[ -n "${RUN_GPU:-}" ]]; then
     scripts/run_colabfold.sh all
   else
-    echo "SKIPPED: AF2-Multimer GPU stage (phase 2). Requires colabfold_batch in env 'colabfold', a GPU, and RUN_GPU=1."
+    echo "SKIPPED: AF2-Multimer GPU stage. Requires colabfold_batch in env 'colabfold', a GPU, and RUN_GPU=1."
   fi
 fi
 if has score;  then banner score;  "$PY" -m cofoldbench.score; fi

@@ -27,19 +27,11 @@ def capri_counts(x: pd.Series) -> dict:
     }
 
 
-def wall_times(log_dir: Path, pattern: str) -> pd.Series:
-    """Per-target wall time (s) from the run logs' [run ]/[done] timestamps in the driver log."""
-    out = {}
-    for log in sorted(log_dir.glob("*.log")):
-        if log.name in ("run_boltz.log", "run_colabfold.log"):
-            continue
-    return pd.Series(out, dtype=float)
-
-
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--config", default="config.yaml")
-    ap.add_argument("--driver-logs", nargs="*", default=[], help="driver logs with [run ]/[done] lines for timing")
+    ap.add_argument("--driver-logs", nargs="*", default=[],
+                    help="optional: driver logs (stdout of scripts/run_*.sh, not committed) with [run ]/[done] lines; adds wall-time sections")
     args = ap.parse_args(argv)
     cfg = load_config(args.config)
     res_dir = resolve(cfg, "results_dir")

@@ -1,4 +1,4 @@
-# conda env for the scoring layer + Boltz-2 (GPU, phase 2).
+# conda env for the scoring layer + Boltz-2 (GPU).
 #   mamba env create -f environment.yml
 # AlphaFold2-Multimer runs in a SEPARATE env (`colabfold`, python 3.10, jax+cuda):
 #   mamba create -n colabfold python=3.10 && pip install "colabfold[alphafold]" \

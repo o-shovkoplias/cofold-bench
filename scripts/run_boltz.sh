@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run Boltz-2 on one target (or all) -- PHASE 2 (GPU). Resume-safe: skips finished targets.
+# Run Boltz-2 on one target (or all) on the GPU. Resume-safe: skips finished targets.
 #
 #   scripts/run_boltz.sh 9ASS            # one target
 #   scripts/run_boltz.sh all             # every data/inputs/boltz/*.yaml
@@ -11,7 +11,8 @@
 #                   complex_plddt, pair_chains_iptm ...).  Models are sorted by confidence_score.
 # GPU memory: an RTX 4060 Laptop (8 GB) handles ~550 tokens with recycling_steps 3 and
 #   diffusion_samples 5 (samples run sequentially: --max_parallel_samples 1 keeps peak memory low).
-#   If CUDA OOM: lower --max_parallel_samples, --diffusion_samples, or add --no_kernels.
+#   The MSA module's memory scales with the number of LOADED MSA sequences: max_msa_seqs /
+#   num_subsampled_msa (config.yaml, 512/128 here) is what made all 22 targets fit; lower them further on OOM.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
@@ -31,6 +32,8 @@ FORMAT="$(cfg "['boltz']['output_format']")"
 PAIRING="$(cfg "['boltz']['msa_pairing_strategy']")"
 SEED="$(cfg "['boltz']['seed']")"
 USE_POT="$(cfg "['boltz']['use_potentials']")"
+MAX_MSA="$(cfg "['boltz']['max_msa_seqs']")"
+SUB_MSA="$(cfg "['boltz']['num_subsampled_msa']")"
 LOG_DIR="$OUT_ROOT/logs"; mkdir -p "$LOG_DIR"
 
 if [[ "$TARGET" == "all" ]]; then
@@ -51,7 +54,7 @@ for ID in $IDS; do
   DONE="$OUT/boltz_results_$ID/predictions/$ID/confidence_${ID}_model_0.json"
   if [[ -f "$DONE" ]]; then echo "[skip] $ID already predicted ($DONE)"; continue; fi
   mkdir -p "$OUT"
-  echo "[run ] $ID  $(date -Is)  recycling=$RECYCLE samples=$SAMPLES steps=$STEPS"
+  echo "[run ] $ID  $(date -Is)  recycling=$RECYCLE samples=$SAMPLES steps=$STEPS msa=$MAX_MSA/$SUB_MSA"
   # --no_kernels: the cuEquivariance CUDA kernels are optional and not installed in the cofold env;
   # the plain PyTorch path gives identical results, ~1.5-2x slower.
   # shellcheck disable=SC2086
@@ -59,7 +62,7 @@ for ID in $IDS; do
       --out_dir "$OUT" \
       --use_msa_server --msa_pairing_strategy "$PAIRING" --no_kernels \
       --recycling_steps "$RECYCLE" --diffusion_samples "$SAMPLES" --sampling_steps "$STEPS" \
-      --max_parallel_samples 1 \
+      --max_parallel_samples 1 --max_msa_seqs "$MAX_MSA" --num_subsampled_msa "$SUB_MSA" \
       --output_format "$FORMAT" --seed "$SEED" --write_full_pae \
       $EXTRA 2>&1 | tee "$LOG_DIR/$ID.log"
   if [[ -f "$DONE" ]]; then echo "[done] $ID"; else echo "[FAIL] $ID -- see $LOG_DIR/$ID.log"; fi

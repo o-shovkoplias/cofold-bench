@@ -8,7 +8,8 @@ model) is scored with
   (0-100 for both predictors; a 0-1 scale is auto-detected and rescaled),
 * DockQ / iRMSD / LRMSD / fnat (:mod:`dockq_runner`) against biological
   assembly 1 of the RCSB mmCIF, restricted to protein heavy atoms and written
-  as PDB with the original chain ids.
+  as PDB with the original chain ids; the model->native chain mapping is chosen
+  by sequence identity (see :mod:`dockq_runner`).
 
 Output: ``results/results.csv`` (one row per target x predictor x model) and
 ``results/summary.csv`` (top-1 per target x predictor, wide format).
@@ -22,6 +23,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -60,9 +62,10 @@ def find_models(cfg: dict, predictor: str, pid: str) -> list[Confidence]:
 
 
 def score_model(
-    model: Confidence, native_pdb: Path, native_chains: tuple[str, str], pdq: PDockQParams
+    model: Confidence, native_pdb: Path, native_chains: tuple[str, str], pdq: PDockQParams,
+    root: Path | None = None,
 ) -> dict:
-    """pDockQ + DockQ for a single model file (chains A/B)."""
+    """pDockQ + DockQ for a single model file (chains A/B); ``model_file`` is written relative to ``root``."""
     atoms = st.read_structure(model.model_file)
     chains = st.protein_chain_ids(atoms)
     if len(chains) != 2:
@@ -71,6 +74,8 @@ def score_model(
     pdq_out = pdockq_from_structure(atoms, chains[0], chains[1], pdq, plddt_scale="auto")
     dq = dockq_two_chain(model.model_file, native_pdb, native_chains, model_chains=(chains[0], chains[1]))
     row = model.as_row()
+    if root is not None:
+        row["model_file"] = os.path.relpath(model.model_file, root)
     row.update({f"pdockq_{k}" if k != "pdockq" else "pdockq": v for k, v in pdq_out.items()})
     row.update({
         "dockq": dq.get("DockQ"), "irmsd": dq.get("iRMSD"), "lrmsd": dq.get("LRMSD"),
@@ -121,11 +126,11 @@ def main(argv: list[str] | None = None) -> int:
             models = find_models(cfg, pred, pid)
             if not models:
                 n_missing += 1
-                log.info("%s/%s: no predictions found (pending phase 2)", pid, pred)
+                log.info("%s/%s: no predictions found under results/raw", pid, pred)
                 continue
             for m in models if args.all_models else models[:1]:
                 try:
-                    row = score_model(m, native_pdb, native_chains, pdq)
+                    row = score_model(m, native_pdb, native_chains, pdq, root=Path(cfg["_root"]))
                 except Exception as exc:  # noqa: BLE001
                     log.error("%s/%s rank %d failed: %s", pid, pred, m.rank, exc)
                     row = m.as_row() | {"dockq_error": f"{type(exc).__name__}: {exc}"}
@@ -138,7 +143,7 @@ def main(argv: list[str] | None = None) -> int:
     suffix = f"_{args.tag}" if args.tag else ""
     out = res_dir / f"results{suffix}.csv"
     if not rows:
-        log.warning("no predictions scored; %d target/predictor pairs pending. Nothing written.", n_missing)
+        log.warning("no predictions scored; %d target/predictor pairs without predictions. Nothing written.", n_missing)
         return 0
     res = pd.DataFrame(rows)
     lead = ["pdb_id", "role", "subset", "total_length", "predictor", "rank", "iptm", "ptm", "plddt", "ranking_score",
@@ -148,7 +153,7 @@ def main(argv: list[str] | None = None) -> int:
     top = res[res["rank"] == 1].pivot_table(index="pdb_id", columns="predictor", values=["iptm", "pdockq", "dockq"])
     top.columns = [f"{a}_{b}" for a, b in top.columns]
     top.to_csv(res_dir / f"summary{suffix}.csv")
-    log.info("wrote %s (%d rows) and summary.csv; %d target/predictor pairs still pending", out, len(res), n_missing)
+    log.info("wrote %s (%d rows) and summary%s.csv; %d target/predictor pairs without predictions", out, len(res), suffix, n_missing)
     return 0
 
 

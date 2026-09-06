@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run ColabFold / AlphaFold2-Multimer v3 on one target (or all) -- PHASE 2 (GPU). Resume-safe.
+# Run ColabFold / AlphaFold2-Multimer v3 on one target (or all) on the GPU. Resume-safe.
 #
 #   scripts/run_colabfold.sh 9ASS
 #   scripts/run_colabfold.sh all

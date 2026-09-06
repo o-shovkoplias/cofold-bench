@@ -21,7 +21,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
-from scipy.stats import spearmanr  # noqa: E402
+from scipy.stats import spearmanr, wilcoxon  # noqa: E402
 
 from .config import load_config, resolve  # noqa: E402
 
@@ -54,7 +54,8 @@ def scatter(top: pd.DataFrame, out) -> None:
     ax.set_ylabel(f"DockQ  {LABEL['boltz2']}")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
-    ax.set_title(f"n = {len(w)} heterodimers; Boltz-2 better in {(w['boltz2'] > w['af2m']).sum()}")
+    pval = wilcoxon(w["boltz2"], w["af2m"]).pvalue if len(w) >= 6 else float("nan")
+    ax.set_title(f"n = {len(w)} heterodimers, top-1 model per predictor\nBoltz-2 higher in {(w['boltz2'] > w['af2m']).sum()}/{len(w)}, Wilcoxon signed-rank p = {pval:.2f}", fontsize=9)
     fig.tight_layout()
     fig.savefig(out, dpi=200)
     plt.close(fig)
@@ -73,12 +74,15 @@ def bars(top: pd.DataFrame, out) -> None:
         ax.bar(x + (i - (len(preds) - 1) / 2) * width, w[p].fillna(0), width, label=LABEL[p], color=COLOR[p])
     for y, name in CAPRI:
         ax.axhline(y, color="0.7", lw=0.7, ls=":")
-        ax.text(len(w) - 0.5, y, name, fontsize=6, va="bottom", ha="right", color="0.4")
+        # CAPRI class labels in the empty margin right of the last bar group
+        ax.text(len(w) - 0.45, y, name, fontsize=6, va="bottom", ha="left", color="0.4")
     ax.set_xticks(x)
     ax.set_xticklabels(w.index, rotation=90, fontsize=7)
+    ax.set_xlim(-0.6, len(w) + 0.6)
     ax.set_ylabel("DockQ (top-1 model)")
     ax.set_ylim(0, 1)
-    ax.legend(fontsize=7, frameon=False)
+    ax.set_title(f"n = {len(w)} heterodimers, sorted by {LABEL[preds[0]]} DockQ; dotted lines = CAPRI thresholds", fontsize=8)
+    ax.legend(fontsize=7, frameon=False, loc="upper right")
     fig.tight_layout()
     fig.savefig(out, dpi=200)
     plt.close(fig)
@@ -86,17 +90,22 @@ def bars(top: pd.DataFrame, out) -> None:
 
 def iptm_vs_dockq(top: pd.DataFrame, out) -> None:
     fig, axes = plt.subplots(1, 2, figsize=(8.4, 3.9), sharey=True)
+    xlabel = {"iptm": "ipTM (predictor's own)", "pdockq": "pDockQ (Bryant et al. 2022)"}
+    legend_loc = {"iptm": "upper left", "pdockq": "lower right"}  # empty corners of each panel
     for ax, xcol in zip(axes, ("iptm", "pdockq")):
+        for y, name in CAPRI:
+            ax.axhline(y, color="0.85", lw=0.7, ls=":", zorder=0)
         for p, g in top.groupby("predictor"):
             g = g.dropna(subset=[xcol, "dockq"])
             if len(g) < 3:
                 continue
             rho, pval = spearmanr(g[xcol], g["dockq"])
-            ax.scatter(g[xcol], g["dockq"], s=28, color=COLOR.get(p, "k"), label=f"{LABEL.get(p, p)}  rho={rho:.2f} (n={len(g)})")
-        ax.set_xlabel(xcol if xcol != "iptm" else "ipTM")
+            ax.scatter(g[xcol], g["dockq"], s=28, color=COLOR.get(p, "k"), zorder=3,
+                       label=f"{LABEL.get(p, p)}  Spearman \u03c1 = {rho:.2f} (n = {len(g)})")
+        ax.set_xlabel(xlabel[xcol])
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
-        ax.legend(fontsize=6.5, frameon=False, loc="upper left")
+        ax.legend(fontsize=6.5, frameon=False, loc=legend_loc[xcol])
     axes[0].set_ylabel("DockQ (top-1 model)")
     fig.tight_layout()
     fig.savefig(out, dpi=200)
@@ -113,7 +122,7 @@ def main(argv: list[str] | None = None) -> int:
     fig_dir = resolve(cfg, "figures_dir")
     fig_dir.mkdir(parents=True, exist_ok=True)
     if not res_csv.exists():
-        log.warning("%s not found - nothing to plot (predictions pending)", res_csv)
+        log.warning("%s not found - nothing to plot (run cofoldbench.score first)", res_csv)
         return 0
     top = top1(pd.read_csv(res_csv))
     scatter(top, fig_dir / "dockq_scatter.png")
