@@ -47,7 +47,9 @@ def scatter(top: pd.DataFrame, out) -> None:
     ax.plot([0, 1], [0, 1], "--", color="0.6", lw=1)
     ax.scatter(w["af2m"], w["boltz2"], s=36, color="0.2", zorder=3)
     for pid, r in w.iterrows():
-        ax.annotate(pid, (r["af2m"], r["boltz2"]), fontsize=6, xytext=(3, 3), textcoords="offset points")
+        # label only targets where the two predictors disagree (|dDockQ| > 0.15) or both fail (< 0.23)
+        if abs(r["boltz2"] - r["af2m"]) > 0.15 or max(r["boltz2"], r["af2m"]) < 0.23:
+            ax.annotate(pid, (r["af2m"], r["boltz2"]), fontsize=6, xytext=(3, 3), textcoords="offset points")
     ax.set_xlabel(f"DockQ  {LABEL['af2m']}")
     ax.set_ylabel(f"DockQ  {LABEL['boltz2']}")
     ax.set_xlim(0, 1)

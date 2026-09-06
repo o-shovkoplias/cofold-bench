@@ -45,5 +45,5 @@ if has predict-af2; then
   fi
 fi
 if has score;  then banner score;  "$PY" -m cofoldbench.score; fi
-if has report; then banner report; "$PY" -m cofoldbench.plot; fi
+if has report; then banner report; "$PY" -m cofoldbench.report; "$PY" -m cofoldbench.plot; fi
 echo; echo "run_all.sh finished: ${STAGES[*]}"
