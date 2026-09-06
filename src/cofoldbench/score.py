@@ -86,10 +86,16 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--ids", nargs="*")
     ap.add_argument("--all-models", action="store_true", help="score every model, not only rank 1")
     ap.add_argument("--predictors", nargs="*", default=["boltz2", "af2m"])
+    ap.add_argument("--boltz-out", help="override paths.boltz_out (e.g. results/raw/boltz_default for the MSA-depth side comparison)")
+    ap.add_argument("--tag", help="write results_<tag>.csv / summary_<tag>.csv instead of results.csv / summary.csv")
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
     cfg = load_config(args.config)
+
+    if args.boltz_out:
+
+        cfg["paths"]["boltz_out"] = args.boltz_out
     pdq = PDockQParams(**cfg["scoring"]["pdockq"])
     df = load_targets(cfg)
     if args.ids:
@@ -129,7 +135,8 @@ def main(argv: list[str] | None = None) -> int:
                          f"{row.get('pdockq', float('nan')):.3f}", f"{row.get('dockq', float('nan')):.3f}")
 
     res_dir.mkdir(parents=True, exist_ok=True)
-    out = res_dir / "results.csv"
+    suffix = f"_{args.tag}" if args.tag else ""
+    out = res_dir / f"results{suffix}.csv"
     if not rows:
         log.warning("no predictions scored; %d target/predictor pairs pending. Nothing written.", n_missing)
         return 0
@@ -140,7 +147,7 @@ def main(argv: list[str] | None = None) -> int:
     res.to_csv(out, index=False)
     top = res[res["rank"] == 1].pivot_table(index="pdb_id", columns="predictor", values=["iptm", "pdockq", "dockq"])
     top.columns = [f"{a}_{b}" for a, b in top.columns]
-    top.to_csv(res_dir / "summary.csv")
+    top.to_csv(res_dir / f"summary{suffix}.csv")
     log.info("wrote %s (%d rows) and summary.csv; %d target/predictor pairs still pending", out, len(res), n_missing)
     return 0
 
