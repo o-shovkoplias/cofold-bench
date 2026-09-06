@@ -23,7 +23,7 @@ BOLTZ="$(dirname "$PY")/boltz"
 cfg() { "$PY" -c "import yaml,sys; c=yaml.safe_load(open('config.yaml')); print(c$1)"; }
 
 IN_DIR="$(cfg "['paths']['boltz_inputs']")"
-OUT_ROOT="$(cfg "['paths']['boltz_out']")"
+OUT_ROOT="${BOLTZ_OUT_ROOT:-$(cfg "['paths']['boltz_out']")}"   # env override, e.g. for side-by-side MSA-depth runs
 RECYCLE="$(cfg "['boltz']['recycling_steps']")"
 SAMPLES="$(cfg "['boltz']['diffusion_samples']")"
 STEPS="$(cfg "['boltz']['sampling_steps']")"
